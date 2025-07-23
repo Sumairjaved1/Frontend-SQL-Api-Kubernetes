@@ -4,11 +4,12 @@ const session = require('express-session');
 const mongoose = require('mongoose');
 const app = express();
 const PORT = 3050;
+require('dotenv').config();
 
 // Connect to MongoDB (Adjust the port and db name accordingly)
-mongoose.connect('mongodb://localhost:27017/orders', {
+mongoose.connect(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`, { 
   useNewUrlParser: true,
-  useUnifiedTopology: true,
+  useUnifiedTopology: true
 }).then(() => {
   console.log('MongoDB connected');
 }).catch((err) => {
