@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Orders</h2>
+        
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Serial</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% orders.forEach(order => { %>
+                    <tr>
+                        <td><%= order.serial %></td>
+                        <td>
+                            <ul>
+                                <% order.items.forEach(item => { %>
+                                    <li><%= item.name %> (x<%= item.quantity %>)</li>
+                                <% }) %>
+                            </ul>
+                        </td>
+                        <td><%= order.total %></td>
+                        <td><%= new Date(order._id.getTimestamp()).toLocaleString() %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

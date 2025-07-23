@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Page</title>
+  <link rel="stylesheet" href="/styles.css"> <!-- Link to external CSS -->
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2>Order Vegetables/Fruits</h2>
+    
+    <!-- Order Form -->
+    <form method="POST" action="/add-order">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% storeItems.forEach(item => { %>
+            <tr>
+              <td><%= item.name %></td>
+              <td>rs. <%= item.price %></td>
+              <td>
+                <input type="number" name="quantity[<%= item.name %>]" value="0" min="0" />
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <button type="submit">Submit Order</button>
+    </form>
+
+    <!-- Display Previous Orders -->
+    <div class="orders-list">
+      <h2>Previous Orders</h2>
+      <ul>
+        <% orders.forEach(order => { %>
+          <li>
+            <strong>Order #<%= order.serial %></strong> - Total: ₹<%= order.total %><br>
+            Items:
+            <ul>
+              <% order.items.forEach(it => { %>
+                <li><%= it.name %> - Qty: <%= it.quantity %> @ ₹<%= it.price %></li>
+              <% }) %>
+            </ul>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
