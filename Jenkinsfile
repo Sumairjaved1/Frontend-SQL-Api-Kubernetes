@@ -2,19 +2,25 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'docker-key' // Jenkins credential ID (added via UI)
+        DOCKERHUB_CREDENTIALS = 'docker-key' // DockerHub username/token in Jenkins credentials
         DOCKER_IMAGE = 'sumairjaved/node-application'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
 
     triggers {
-        githubPush()
+        githubPush() // Requires GitHub webhook to be configured
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                checkout scm
+                checkout scmGit(
+                    branches: [[name: '*/main']],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/Sumairjaved1/Frontend-SQL-Api-Kubernetes.git'
+                    ]]
+                )
             }
         }
 
