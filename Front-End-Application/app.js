@@ -79,7 +79,7 @@ const storeItems = [
   { name: 'Orange', price: 30 },
   { name: 'Pota', price: 40 },
   { name: 'Toma', price: 60 },
-  { name: 'Cabbage', price: 80 },
+  { name: 'Cab', price: 80 },
   { name: 'Watermelon', price: 90 },
   { name: 'Melon', price: 75 },
   { name: 'Carrot', price: 100 },
