@@ -5,10 +5,10 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = 3050;
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:30100/orders', {
+// Connect to MongoDB (Adjust the port and db name accordingly)
+mongoose.connect('mongodb://localhost:27017/orders', {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 }).then(() => {
   console.log('MongoDB connected');
 }).catch((err) => {
@@ -22,25 +22,26 @@ const orderSchema = new mongoose.Schema({
     {
       name: String,
       quantity: Number,
-      price: Number
-    }
+      price: Number,
+    },
   ],
-  total: { type: Number, required: true }
+  total: { type: Number, required: true },
 });
 
 const Order = mongoose.model('Order', orderSchema);
 
-// Middleware
+// Middleware setup
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(session({ secret: 'mysecret', resave: false, saveUninitialized: true }));
 
+// Set view engine to EJS
 app.set('view engine', 'ejs');
 
-// Dummy login
+// Dummy login credentials
 const USER = { username: 'admin', password: '1234' };
 
-// Store Items
+// Store items available for order
 const storeItems = [
   { name: 'Apple', price: 50 },
   { name: 'Banana', price: 20 },
@@ -55,10 +56,13 @@ const storeItems = [
 ];
 
 // Routes
+
+// Render the login page
 app.get('/', (req, res) => {
   res.render('login');
 });
 
+// Handle login and redirect to the dashboard
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (username === USER.username && password === USER.password) {
@@ -69,19 +73,27 @@ app.post('/login', (req, res) => {
   }
 });
 
-app.get('/dashboard', (req, res) => {
-  if (!req.session.user) return res.redirect('/');
-  res.render('dashboard', { storeItems });
+// Render the dashboard and fetch orders
+app.get('/dashboard', async (req, res) => {
+  if (!req.session.user) return res.redirect('/'); // Redirect if not logged in
+  try {
+    const orders = await Order.find().sort({ serial: -1 }); // Fetch orders sorted by serial number
+    res.render('dashboard', { storeItems, orders }); // Pass store items and orders to the dashboard
+  } catch (err) {
+    console.log('Error fetching orders:', err);
+    res.send('Error fetching orders');
+  }
 });
 
+// Handle new order submission
 app.post('/add-order', async (req, res) => {
-  const quantities = req.body.quantity; // Object { Apple: '2', Banana: '0', ... }
+  const quantities = req.body.quantity; // Get quantities from the form (Object: { Apple: '2', Banana: '0', ... })
 
   let total = 0;
   let selectedItems = [];
 
   for (let item of storeItems) {
-    let qty = parseInt(quantities[item.name]) || 0;
+    let qty = parseInt(quantities[item.name]) || 0; // Ensure the quantity is an integer
     if (qty > 0) {
       let itemTotal = qty * item.price;
       total += itemTotal;
@@ -91,15 +103,15 @@ app.post('/add-order', async (req, res) => {
 
   if (selectedItems.length > 0) {
     const newOrder = new Order({
-      serial: Date.now(),
+      serial: Date.now(), // Use the current timestamp as the serial number
       items: selectedItems,
-      total
+      total,
     });
 
     try {
-      await newOrder.save();
+      await newOrder.save(); // Save the order to the database
       console.log('Order saved to MongoDB');
-      res.redirect('/dashboard');
+      res.redirect('/dashboard'); // Redirect to dashboard after order is saved
     } catch (err) {
       console.log('Error saving order:', err);
       res.send('Error saving order');
@@ -109,11 +121,11 @@ app.post('/add-order', async (req, res) => {
   }
 });
 
-// Fetch and display orders
+// Fetch and display all orders (this route may be redundant but can be useful for additional features)
 app.get('/orders', async (req, res) => {
   if (!req.session.user) return res.redirect('/');
   try {
-    const orders = await Order.find();
+    const orders = await Order.find().sort({ serial: -1 });
     res.render('orders', { orders });
   } catch (err) {
     console.log('Error fetching orders:', err);
@@ -121,7 +133,7 @@ app.get('/orders', async (req, res) => {
   }
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

@@ -12,11 +12,12 @@ h2 {
     text-align: center;
     color: #333;
     margin-top: 20px;
+    font-size: 24px;
 }
 
 /* Form Styling */
 form {
-    max-width: 400px;
+    max-width: 1000px;
     margin: 30px auto;
     background: #fff;
     padding: 20px;
@@ -27,9 +28,10 @@ form {
 /* Input Fields */
 input[type="text"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+input[type="email"] {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin: 10px 0;
     border-radius: 5px;
     border: 1px solid #ddd;
@@ -39,7 +41,7 @@ input[type="number"] {
 /* Buttons */
 button {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     background-color: #28a745;
     color: white;
     border: none;
@@ -77,8 +79,11 @@ a:hover {
 /* Dashboard Page Styles */
 .dashboard-container {
     padding: 20px;
-    max-width: 1000px;
-    margin: 0 auto;
+    max-width: 1200px;
+    margin: 30px auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 table {
@@ -130,7 +135,7 @@ button[type="submit"]:hover {
 
 .orders-list li {
     background-color: #fff;
-    padding: 10px;
+    padding: 15px;
     margin: 10px 0;
     border-radius: 8px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
@@ -160,11 +165,11 @@ button[type="submit"]:hover {
     }
 
     .dashboard-container {
-        padding: 10px;
+        padding: 15px;
     }
 
     table th, table td {
-        padding: 8px;
+        padding: 10px;
         font-size: 14px;
     }
 
@@ -176,14 +181,23 @@ button[type="submit"]:hover {
 
 @media (max-width: 480px) {
     h2 {
-        font-size: 18px;
+        font-size: 20px;
     }
 
     table th, table td {
-        padding: 6px;
+        padding: 8px;
+        font-size: 13px;
     }
 
     input[type="number"] {
         width: 50px;
+    }
+
+    .orders-list li {
+        font-size: 14px;
+    }
+
+    .orders-list ul li {
+        font-size: 13px;
     }
 }
