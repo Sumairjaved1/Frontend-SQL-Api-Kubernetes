@@ -25,12 +25,37 @@ spec:
         - containerPort: 27017
         env:
         - name: MONGO_INITDB_ROOT_USERNAME
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: username
         - name: MONGO_INITDB_ROOT_PASSWORD
-          value: "admin123"
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-credentials
+              key: password
         volumeMounts:
         - name: mongo-storage
           mountPath: /data/db
+        resources:
+          requests:
+            memory: "500Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 27017
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 27017
+          initialDelaySeconds: 5
+          periodSeconds: 10
       volumes:
       - name: mongo-storage
         persistentVolumeClaim:
@@ -43,11 +68,11 @@ metadata:
   namespace: first-complete-kubernetes-project
 spec:
   capacity:
-    storage: 5Gi  # Change this as needed
+    storage: 5Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/data/mongodb  # This is for testing. Use a proper storage solution for production
+    path: /mnt/data/mongodb  # Use a more production-ready storage solution in the cloud
   persistentVolumeReclaimPolicy: Retain
 ---
 apiVersion: v1
@@ -60,8 +85,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi  # Change this as needed
-  storageClassName: ""  # Leave blank if using a static PV like above
+      storage: 5Gi
+  storageClassName: ""
 ---
 apiVersion: v1
 kind: Service
