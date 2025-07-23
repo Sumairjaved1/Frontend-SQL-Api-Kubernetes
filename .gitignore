@@ -1,5 +1,5 @@
 # Ignore the .env file containing sensitive information
-.env
+/Front-End-Application/.env
 
 # Node.js specific
 node_modules/
