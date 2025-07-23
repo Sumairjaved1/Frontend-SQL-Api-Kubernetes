@@ -1,5 +1,5 @@
-# Ignore the .env file containing sensitive information
-/Front-End-Application/.env
+# Ignore .env file containing sensitive information
+.env
 
 # Node.js specific
 node_modules/
@@ -10,3 +10,11 @@ node_modules/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Optional: Ignore build or dist directories
+build/
+dist/
+
+# Optional: Ignore Kubernetes and other YAML files (if needed)
+*.yml
+*.yaml
