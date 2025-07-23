@@ -5,17 +5,47 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = 3050;
 require('dotenv').config();
+// Build the MongoDB URI using environment variables
+const mongoURI = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@mongodb-service:27017/${process.env.MONGO_DB}?authSource=admin`;
 
-// Connect to MongoDB (Adjust the port and db name accordingly)
-mongoose.connect(`mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`, { 
+const options = {
   useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('MongoDB connected');
-}).catch((err) => {
-  console.log('MongoDB connection error:', err);
+  useUnifiedTopology: true,
+  connectTimeoutMS: 30000,  // Timeout for initial connection attempt
+  socketTimeoutMS: 45000,   // Timeout for socket inactivity (queries)
+  maxPoolSize: 10,          // Connection pool size (adjust as needed)
+  autoIndex: false,         // Disable auto-indexing in production for performance
+  retryWrites: true,        // Enable retryable writes (if your setup supports it)
+};
+
+// Connect to MongoDB
+mongoose.connect(mongoURI, options)
+  .then(() => {
+    console.log('MongoDB connected successfully');
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
+
+// Event listeners for connection status
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected to MongoDB');
 });
 
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('Mongoose disconnected from MongoDB');
+});
+
+// Gracefully handle process termination (e.g., Ctrl+C)
+process.on('SIGINT', async () => {
+  await mongoose.disconnect();
+  console.log('Mongoose disconnected due to app termination');
+  process.exit(0);
+});
 // Create a schema and model for orders
 const orderSchema = new mongoose.Schema({
   serial: { type: Number, required: true, unique: true },
