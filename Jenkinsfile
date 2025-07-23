@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'docker-key' // DockerHub username/token in Jenkins credentials
         DOCKER_IMAGE = 'sumairjaved/node-application'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        IMAGE_TAG = 'latest' // Changed from "${env.BUILD_NUMBER}" to 'latest'
     }
 
     triggers {
@@ -28,6 +28,7 @@ pipeline {
             steps {
                 script {
                     dir('Front-End-Application') {
+                        // The build command will now use 'latest' as the tag
                         docker.build("${DOCKER_IMAGE}:${IMAGE_TAG}")
                     }
                 }
@@ -38,9 +39,12 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', DOCKERHUB_CREDENTIALS) {
+                        // Push the 'latest' tagged image
                         docker.image("${DOCKER_IMAGE}:${IMAGE_TAG}").push()
-                        docker.image("${DOCKER_IMAGE}:${IMAGE_TAG}").tag('latest')
-                        docker.image("${DOCKER_IMAGE}:latest").push()
+                        // No need to re-tag to 'latest' if it's already 'latest'
+                        // docker.image("${DOCKER_IMAGE}:${IMAGE_TAG}").tag('latest')
+                        // The push of 'latest' is already handled by the line above
+                        // docker.image("${DOCKER_IMAGE}:latest").push()
                     }
                 }
             }
@@ -49,7 +53,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Docker image pushed: ${DOCKER_IMAGE}:${IMAGE_TAG} and :latest"
+            echo "✅ Docker image pushed: ${DOCKER_IMAGE}:${IMAGE_TAG}" // Updated message
         }
         failure {
             echo "❌ Build or push failed."
