@@ -23,39 +23,15 @@ spec:
         image: mongo:latest
         ports:
         - containerPort: 27017
+          hostPort: 27017  # This defines the hostPort for MongoDB in the Deployment section
         env:
         - name: MONGO_INITDB_ROOT_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: mongodb-credentials
-              key: username
+          value: "admin"
         - name: MONGO_INITDB_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mongodb-credentials
-              key: password
+          value: "admin123"
         volumeMounts:
         - name: mongo-storage
           mountPath: /data/db
-        resources:
-          requests:
-            memory: "500Mi"
-            cpu: "500m"
-          limits:
-            memory: "1Gi"
-            cpu: "1"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 27017
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 27017
-          initialDelaySeconds: 5
-          periodSeconds: 10
       volumes:
       - name: mongo-storage
         persistentVolumeClaim:
@@ -68,11 +44,11 @@ metadata:
   namespace: first-complete-kubernetes-project
 spec:
   capacity:
-    storage: 5Gi
+    storage: 5Gi  # Adjust the size as needed
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/data/mongodb  # Use a more production-ready storage solution in the cloud
+    path: /mnt/data/mongodb  # Use proper storage in production
   persistentVolumeReclaimPolicy: Retain
 ---
 apiVersion: v1
@@ -85,8 +61,8 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
-  storageClassName: ""
+      storage: 5Gi  # Adjust the size as needed
+  storageClassName: ""  # Leave empty for static volume use
 ---
 apiVersion: v1
 kind: Service
@@ -99,6 +75,5 @@ spec:
   ports:
     - protocol: TCP
       port: 27017
-      targetPort: 27017
-      nodePort: 30100
-  type: NodePort
+      targetPort: 27017  # Expose the MongoDB port
+  type: NodePort  # Expose as NodePort for external access (if needed)
