@@ -1,0 +1,23 @@
+# Use official Node.js image from Docker Hub
+FROM node:16
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json to the container
+COPY package*.json ./
+
+# Install the app dependencies
+RUN npm install
+
+# Copy the rest of the application code into the container
+COPY . .
+
+# Expose the port your app runs on
+EXPOSE 3050
+
+# Define environment variable for MongoDB URI (optional)
+# ENV MONGO_URI=mongodb://admin:admin123@localhost:27017/orders?authSource=admin
+
+# Start the app
+CMD ["node", "app.js"]

@@ -1,0 +1,163 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jenkins-pv
+  namespace: first-complete-kubernetes-project
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard # Ensure this matches the PVC
+  hostPath:
+    path: /mnt/data/jenkins # Path on your local system (update as needed)
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-pvc
+  namespace: first-complete-kubernetes-project
+  labels:
+    app: jenkins
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path # Match with PV's storageClass
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: first-complete-kubernetes-project
+  labels:
+    app: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      securityContext:
+        fsGroup: 1000
+      serviceAccountName: jenkins
+      containers:
+        - name: jenkins
+          image: jenkins/jenkins:lts
+          imagePullPolicy: Always
+          env:
+            - name: JAVA_OPTS
+              value: "-Djenkins.install.runSetupWizard=false" # Skip setup wizard
+          ports:
+            - containerPort: 8080
+            - containerPort: 50000
+          volumeMounts:
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+            - name: docker-bin
+              mountPath: /usr/bin/docker
+              readOnly: true
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 999  # docker group ID
+      volumes:
+        - name: jenkins-home
+          persistentVolumeClaim:
+            claimName: jenkins-pvc
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        - name: docker-bin
+          hostPath:
+            path: /usr/bin/docker
+            type: File
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins
+  namespace: first-complete-kubernetes-project
+  labels:
+    app: jenkins
+spec:
+  selector:
+    app: jenkins
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080 # Default Jenkins port
+      targetPort: 8080
+    - name: jnlp
+      protocol: TCP
+      port: 50000
+      targetPort: 50000
+  type: ClusterIP # Expose only internally, will be accessed via Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jenkins
+  namespace: first-complete-kubernetes-project
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: / # Re-added Nginx specific annotation
+    ingress.kubernetes.io/class: nginx # Re-added Nginx specific annotation
+spec:
+  # Removed ingressClassName: traefik
+  rules:
+    - host: localhost # Expose Jenkins on localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jenkins
+                port:
+                  number: 8080
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: first-complete-kubernetes-project
+  labels:
+    app: jenkins
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: first-complete-kubernetes-project
+  name: jenkins-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "persistentvolumeclaims"]
+    verbs: ["get", "list", "create", "update", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-role-binding
+  namespace: first-complete-kubernetes-project
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: first-complete-kubernetes-project
+roleRef:
+  kind: Role
+  name: jenkins-role
+  apiGroup: rbac.authorization.k8s.io
